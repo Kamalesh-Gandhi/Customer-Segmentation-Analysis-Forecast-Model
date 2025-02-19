@@ -1,9 +1,43 @@
 import pandas as pd
 import logging 
+import joblib
+from sklearn.preprocessing import LabelEncoder
 from utils.helper_functions import Detect_outliers_Zscore
 
 
+def Label_Encoding(df:pd.DataFrame)-> pd.DataFrame:
+    """
+    Perform encoding to the Categorical Columns
+
+    Args:
+    df --> Pandas DataFrame
+
+    return:
+    Pandas DataFrame
+    
+    """
+    try:
+        logging.info('encoding Process Started...')
+
+        category_col = df.select_dtypes(include=['object','category']).columns.to_list()
+
+        encoder = LabelEncoder()
+        df[category_col] = encoder.fit_transform(df[category_col])
+        return df
+
+        logging.info('Encoding Process Finished')
+
+    except Exception as e:
+        logging.error(f'Error in Encoding Process: {e} ')
+        raise e
+
+
 def DataPreProcessing(df:pd.DataFrame) -> pd.DataFrame :
+
+    """
+    
+    
+    """
  
     try:
         
@@ -28,7 +62,11 @@ def DataPreProcessing(df:pd.DataFrame) -> pd.DataFrame :
         #Detect Technical Correct Outliers 
         Outliers_data = Detect_outliers_Zscore(df)
 
-        return df
+        Encoded_df = Label_Encoding(df)
+
+        joblib.dump(Encoded_df, "models/Encoder.pkl")
+
+        return Encoded_df
     
     except Exception as e:
         logging.error(f"Error in Detecting Outliers : {e}")

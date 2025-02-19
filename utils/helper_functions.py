@@ -1,8 +1,22 @@
 import pandas as pd
 from scipy.stats import zscore
+from imblearn.over_sampling import SMOTE
 import logging
 
 def Detect_outliers_Zscore(data : pd.DataFrame,columns,threshold = 3) -> pd.DataFrame:
+
+    """
+    Detecting the Outliers in the Data by using Zscore method
+
+    Args:
+    Data --> Pandas DataFrame
+    columns --> apply the zscore to particular columns of Data
+    threshold --> Value to segregate the Outliers 
+
+    Return:
+    Pandas DataFrame 
+    
+    """
 
     try:
         outlier_stats = []
@@ -29,6 +43,16 @@ def Detect_outliers_Zscore(data : pd.DataFrame,columns,threshold = 3) -> pd.Data
 
 
 def Store_ProcessedData(df : pd.DataFrame) -> pd.DataFrame :
+    """
+    Store the Processed Data into the Local File
+
+    Args:
+    df --> Pandas DataFrame
+
+    Returns:
+    Pandas DataFrame
+
+    """
 
     try:
         df.to_csv('data/Processed_data.csv')
@@ -39,3 +63,12 @@ def Store_ProcessedData(df : pd.DataFrame) -> pd.DataFrame :
         
 
 
+def apply_smote(X:pd.DataFrame , y:pd.Series) -> pd.DataFrame :
+    """
+    
+
+    """
+    smote = SMOTE(sampling_strategy="auto", random_state=42)  # Use auto for automatic balancing
+    X_resampled, y_resampled = smote.fit_resample(X, y)
+    
+    return X_resampled, y_resampled
