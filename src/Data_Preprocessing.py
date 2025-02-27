@@ -30,9 +30,10 @@ def Label_Encoding(df:pd.DataFrame)-> pd.DataFrame:
 
         joblib.dump(encoders, "models/Encoder.pkl")   
 
+        logging.info('Encoding Process Finished')
         return df
 
-        logging.info('Encoding Process Finished')
+
 
     except Exception as e:
         logging.error(f'Error in Encoding Process: {e} ')
