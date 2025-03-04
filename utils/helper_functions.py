@@ -2,6 +2,8 @@ import pandas as pd
 from scipy.stats import zscore
 from imblearn.over_sampling import SMOTE
 import logging
+from sklearn.preprocessing import LabelEncoder
+import joblib
 
 def Detect_outliers_Zscore(data : pd.DataFrame,columns,threshold = 3) -> pd.DataFrame:
 
@@ -42,7 +44,7 @@ def Detect_outliers_Zscore(data : pd.DataFrame,columns,threshold = 3) -> pd.Data
         raise e
 
 
-def Store_ProcessedData(df : pd.DataFrame) -> pd.DataFrame :
+def Store_ProcessedData(df : pd.DataFrame,FileName) -> pd.DataFrame :
     """
     Store the Processed Data into the Local File
 
@@ -55,11 +57,11 @@ def Store_ProcessedData(df : pd.DataFrame) -> pd.DataFrame :
     """
 
     try:
-        df.to_csv('data/Processed_data.csv')
-        logging.info('Stored Processed Data in the Local')
+        df.to_csv(f'data/{FileName}.csv')
+        logging.info(f'Stored {FileName} in the Local')
 
     except Exception as e:
-        logging.error(f'Error in Storing the Processed Data: {e}')
+        logging.error(f'Error in Storing the {FileName}: {e}')
         
 
 
@@ -72,3 +74,37 @@ def apply_smote(X:pd.DataFrame , y:pd.Series) -> pd.DataFrame :
     X_resampled, y_resampled = smote.fit_resample(X, y)
     
     return X_resampled, y_resampled
+
+
+def Label_Encoding(df_Train:pd.DataFrame, df_Test: pd.DataFrame, col:str)-> tuple[pd.DataFrame,pd.DataFrame]:
+    """
+    Perform encoding to the Categorical Columns
+
+    Args:
+    df --> Pandas DataFrame
+
+    return:
+    Pandas DataFrame
+    
+    """
+    try:
+        logging.info('Encoding Process Started...')
+
+        encoders = {}
+        encoder = LabelEncoder()
+
+        df_Train[col] = encoder.fit_transform(df_Train[col])
+        # df_Test[col] = encoder.transform(df_Test[col])
+        df_Test[col] = df_Test[col].apply(lambda x: encoder.transform([x])[0] if x in encoder.classes_ else -1)
+        encoders[col] = encoder  # Store encoder
+
+        joblib.dump(encoders, "models/Encoder.pkl")   
+
+        logging.info('Encoding Process Finished')
+        return df_Train , df_Test
+
+
+
+    except Exception as e:
+        logging.error(f'Error in Encoding Process: {e} ')
+        raise e

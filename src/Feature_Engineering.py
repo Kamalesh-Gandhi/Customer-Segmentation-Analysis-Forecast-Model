@@ -69,12 +69,13 @@ def new_feature_2(df: pd.DataFrame, col1: str, col2: str, transform_type: str,fe
         raise e
     
 
-def feature_engineering(df: pd.DataFrame) -> pd.DataFrame :
+def feature_engineering(df_Train: pd.DataFrame, df_Test: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame] :
     """
     Creating New Features with the help of the existing Data
 
     Args:
-    df --> Pandas DataFrame
+    df_Train --> Pandas Train DataFrame
+    df_Test --> Pandas Test DataFrame
 
     Return:
     Pandas DataFrame
@@ -82,25 +83,31 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame :
     """
 
     try:
+        var = ['Train', 'Test']
+        count = 0
 
-        logging.info('Starting Feature Engineering Process.........')
+        for df in [df_Train, df_Test]:
 
-        #Creating the Target Feature for Classification Problem
-        df = target_feature(df ,col1= 'page' , col2= 'price' , col3= 'order' , feature_name= 'Purchase Completed' )
+            logging.info(f'Starting Feature Engineering Process for {var[count]}.........')
 
-        # Apply Time-Based Feature (Using Helper Function)
-        df = new_feature_1(df , col1 ='day' , feature_name='is_weekend')
+            #Creating the Target Feature for Classification Problem
+            df = target_feature(df ,col1= 'page' , col2= 'price' , col3= 'order' , feature_name= 'Purchase Completed' )
 
-        # Apply Session based feature using the existing columns
-        df = new_feature_2(df ,col1= 'session_id' ,col2= 'order' ,transform_type= 'count' ,feature_name= 'total_clicks' )
+            # Apply Time-Based Feature (Using Helper Function)
+            df = new_feature_1(df , col1 ='day' , feature_name='is_weekend')
 
-        # Apply Session based feature using the existing columns
-        df = new_feature_2(df ,col1= 'session_id' ,col2= 'page' ,transform_type= 'max' ,feature_name= 'max_page_reached' )
+            # Apply Session based feature using the existing columns
+            df = new_feature_2(df ,col1= 'session_id' ,col2= 'order' ,transform_type= 'count' ,feature_name= 'total_clicks' )
 
-        return df
+            # Apply Session based feature using the existing columns
+            df = new_feature_2(df ,col1= 'session_id' ,col2= 'page' ,transform_type= 'max' ,feature_name= 'max_page_reached' )
+
+            count += 1
+
+        return df_Train, df_Test
 
     except Exception as e:
-        logging.error(f'Error occured in the Feature Engineering Process')
+        logging.error(f'Error occured in the Feature Engineering Process {var[count]}')
         raise e
 
 
