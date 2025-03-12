@@ -102,13 +102,13 @@ def evaluate_clustering_models(models_dir, X_scaled):
     """Evaluates clustering models using Silhouette Score & Davies-Bouldin Index."""
 
     results = {}
-    model_files = ["K-Means_clustering.pkl", "DBSCAN_clustering.pkl", "Hierarchical_clustering.pkl"]
+    model_files = ["K-Means", "DBSCAN", "Hierarchical"]
 
     for model_file in model_files:
         model_path = f"{models_dir}/{model_file}"
 
         try:
-            model = joblib.load(model_path)
+            model = joblib.load(f'{model_path}_clustering.pkl')
         except FileNotFoundError:
             print(f" Warning: {model_file} not found! Skipping...")
             continue

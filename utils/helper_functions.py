@@ -4,6 +4,7 @@ from imblearn.over_sampling import SMOTE
 import logging
 from sklearn.preprocessing import LabelEncoder
 import joblib
+import os
 
 def Detect_outliers_Zscore(data : pd.DataFrame,columns,threshold = 3) -> pd.DataFrame:
 
@@ -57,7 +58,7 @@ def Store_ProcessedData(df : pd.DataFrame,FileName) -> pd.DataFrame :
     """
 
     try:
-        df.to_csv(f'data/{FileName}.csv')
+        df.to_csv(f'data/{FileName}.csv',index = False)
         logging.info(f'Stored {FileName} in the Local')
 
     except Exception as e:
@@ -107,4 +108,21 @@ def Label_Encoding(df_Train:pd.DataFrame, df_Test: pd.DataFrame, col:str)-> tupl
 
     except Exception as e:
         logging.error(f'Error in Encoding Process: {e} ')
+        raise e
+    
+"""
+🔹 Save the Best Model
+"""
+def save_best_model(best_model, model_name: str, model_type: str, models_dir: str) -> str:
+    try:
+        os.makedirs(models_dir, exist_ok=True)
+        model_path = os.path.join(models_dir, f"best_{model_name.replace(' ', '_')}_{model_type}.pkl")
+
+        # ✅ Save the model using Joblib
+        joblib.dump(best_model, model_path)
+        logging.info(f"✅ Best {model_type} Model Saved: {model_path}")
+
+        return model_path
+    except Exception as e:
+        logging.error(f"❌ Error saving best {model_type} model: {e}")
         raise e

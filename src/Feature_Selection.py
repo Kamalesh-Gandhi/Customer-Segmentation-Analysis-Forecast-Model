@@ -53,8 +53,13 @@ def Feature_Selection_Classification(df_train:pd.DataFrame,
         significant_features1 = results_df[results_df["Significant (<0.05)"] == True]["Feature"].tolist()
         significant_features1.append(target_col)
 
-        classification_feature_selected_dfTrain = df_train[significant_features1]
-        classification_feature_selected_dfTest = df_test[significant_features1]
+        classification_feature_selected_dfTrain = df_train[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                            'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
+                                                            'Purchase Completed']]
+        
+        classification_feature_selected_dfTest = df_test[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                        'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
+                                                        'Purchase Completed']]
 
         if classification_feature_selected_dfTrain is None:
             raise ValueError("🚨 classification_feature_selected_df Train is empty. Check the significant features value.")
@@ -66,6 +71,7 @@ def Feature_Selection_Classification(df_train:pd.DataFrame,
 
         logging.info(f'Classification test data shape: {classification_feature_selected_dfTest.shape[0]} rows, {classification_feature_selected_dfTest.shape[1]} columns.')
         
+
 
         return classification_feature_selected_dfTrain, classification_feature_selected_dfTest
     
@@ -117,8 +123,13 @@ def Feature_Selection_Regression(df_train:pd.DataFrame,
         significant_features2 = results_df[results_df["Significant (<0.05)"] == True]["Feature"].tolist()
         significant_features2.append(target_col)
 
-        Regression_feature_selected_dfTrain = df_train[significant_features2]
-        Regression_feature_selected_dfTest = df_test[significant_features2]
+        Regression_feature_selected_dfTrain = df_train[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                        'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
+                                                        'Purchase Completed']]
+        
+        Regression_feature_selected_dfTest = df_test[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                    'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
+                                                    'Purchase Completed']]
 
         if Regression_feature_selected_dfTrain is None:
             raise ValueError("🚨 Regression_feature_selected_df Train is empty. Check the significant features value.")
