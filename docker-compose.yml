@@ -1,0 +1,39 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Docker_Files/Dockerfile.Trainpipeline
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - ZENML_STACK_NAME=custom_stack
+    volumes:
+      - ./models:/app/models    # The training pipeline writes model files here.
+      - ./data:/app/data        # The training pipeline reads/writes data here.
+      - ~/.zenml:/root/.zenml   # Adjust the following path to your local ZenML config directory.
+    depends_on:
+      - mlflow
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Docker_Files/Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./models:/app/models    # The UI will access the model files from here.
+      - ./data:/app/data        # The UI may need to read data if required.
+    depends_on:
+      - pipeline
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Docker_Files/Dockerfile.mlflowTracker
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns             # Persist the MLflow backend store (SQLite file, etc.)
+      - mlflow_artifacts:/app/mlflow/artifacts
+
+volumes:
+  mlflow_artifacts:

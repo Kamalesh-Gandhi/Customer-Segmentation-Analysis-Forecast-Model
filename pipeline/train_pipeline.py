@@ -9,6 +9,21 @@ from steps.Evaluation_Model import evaluate_classification_step, evaluate_regres
 from steps.feature_selection import feature_selection_classification ,feature_selection_Regression
 from steps.best_model import select_best_classification_step, select_best_regression_step, select_best_clustering_step
 from utils.helper_functions import Label_Encoding, Store_ProcessedData
+from zenml.client import Client
+import subprocess
+
+# client = Client()
+# # Check if the active stack's experiment tracker is available
+# if client.active_stack.experiment_tracker is None:
+#     print("Active experiment tracker not found. Initializing ZenML...")
+#     # Run ZenML initialization commands (this may vary based on your setup)
+#     subprocess.run(["zenml", "init"], check=True)
+#     # Optionally, register and set a default stack if needed
+#     subprocess.run(["zenml", "stack", "register", "custom_stack", 
+#                     "--orchestrator=default", 
+#                     "--experiment-tracker=mlflow_tracker", 
+#                     "--artifact-store=default"], check=True)
+#     subprocess.run(["zenml", "stack", "set", "active", "custom_stack"], check=True)
 
 
 # ✅ Set MLflow tracking URI & experiment globally

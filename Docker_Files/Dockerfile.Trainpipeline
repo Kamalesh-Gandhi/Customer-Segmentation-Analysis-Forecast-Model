@@ -1,0 +1,22 @@
+# Use a lightweight Python 3.10 image as the base
+FROM python:3.10-slim
+
+# Set the working directory in the container to /app
+WORKDIR /app
+
+# Copy the requirements.txt file into the container
+COPY requirements.txt .
+
+
+# Install the dependencies specified in requirements.txt without caching
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of your project files into the container
+COPY . .
+
+# Set environment variables to configure the pipeline
+ENV MLFOW_TRACKER_URI = http://mlflow:5000
+ENV ZENML_STACK_NAME = custom_stack
+
+# Specify the command to run your training pipeline script
+CMD ["python", "run_pipeline.py"]
