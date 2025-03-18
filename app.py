@@ -11,6 +11,10 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, mean_absolute_error
 
 
+classifier_scaler = joblib.load('models\Classification_scaler.pkl')
+regression_scaler = joblib.load("models\Regression_scaler.pkl")
+clustering_scaler = joblib.load("models\clustering_scaler.pkl")
+
 # ✅ Mapping for categorical values
 COUNTRY_MAP = {
     1: "Australia", 2: "Austria", 3: "Belgium", 4: "British Virgin Islands", 5: "Cayman Islands",
@@ -69,6 +73,12 @@ best_clustering_model = load_best_model("clustering")
 train_data_path = "data/Train_data.csv"  # ✅ Make sure this path is correct
 if os.path.exists(train_data_path):
     train_data = pd.read_csv(train_data_path)
+
+    if "page2_clothing_model" in train_data.columns and "page1_main_category" in train_data.columns:
+        category_clothing_map = train_data.groupby("page1_main_category")["page2_clothing_model"].unique().to_dict()
+        print(category_clothing_map)
+    else:
+        st.error("🚨 Required columns `page2_clothing_model` or `page1_main_category` not found in train data!")
     
     # Check if `page2_clothing_model` exists
     if "page2_clothing_model" in train_data.columns:
@@ -217,7 +227,8 @@ if page == "📂 Bulk Customers Analyzer":
                                            'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model']
 
                 data_for_classification = data[classification_features]
-                predictions = best_classification_model.predict(data_for_classification)
+                scaled_classificationinput = classifier_scaler.transform(data_for_classification)
+                predictions = best_classification_model.predict(scaled_classificationinput)
 
                 data["Predicted Purchase"] = predictions
 
@@ -235,7 +246,8 @@ if page == "📂 Bulk Customers Analyzer":
                                        'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Purchase Completed']
 
                 data_for_regression = data[regression_features]
-                predictions = best_regression_model.predict(data_for_regression)
+                scaled_regressioninput = regression_scaler.transform(data_for_regression)
+                predictions = best_regression_model.predict(scaled_regressioninput)
 
                 data["Estimated Revenue"] = predictions
 
@@ -251,10 +263,11 @@ if page == "📂 Bulk Customers Analyzer":
             with st.spinner("Processing Clustering..."):
                 time.sleep(2)
 
-                clustering_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
-                            'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Purchase Completed']
+                clustering_features = ['month','day','order', 'country', 'session_id', 'page1_main_category', 'page2_clothing_model', 'colour', 
+                            'location', 'model_photography','price', 'price_2', 'page',  'Purchase Completed','is_weekend','total_clicks','max_page_reached']
                 data_clustering = data[clustering_features]
-                data['Customer Segment'] = best_clustering_model.predict(data)
+                scaled_clusteringinput = clustering_scaler.transform(data_clustering)
+                data['Customer Segment'] = best_clustering_model.predict(scaled_clusteringinput)
 
                 st.success("Clustering Completed!")
                 st.dataframe(data[['session_id','Customer Segment']])
@@ -310,9 +323,11 @@ if page == "👤 Single Customer Analyzer":
         
         # Main Category Selection
         category = col2.selectbox("**Main Category**", list(CATEGORY_MAP.values()), key="classification_page1_main_category") 
-        
+        category_id = next((k for k, v in CATEGORY_MAP.items() if v == category), None)
+        available_clothing_models = category_clothing_map.get(category_id, [])
+
         # Clothing Model Code (Text Input)
-        clothing_model = col3.selectbox("**Clothing Model**", list(clothing_model_map.keys()), key="classification_page2_clothing_model")  
+        clothing_model = col3.selectbox("**Clothing Model**", available_clothing_models, key="classification_page2_clothing_model")  
 
         clothing_model_encoded_classification = clothing_model_map[clothing_model] # Convert back to encoded before prediction
 
@@ -351,14 +366,17 @@ if page == "👤 Single Customer Analyzer":
                 # Convert UI selections to numerical values for prediction
                 input_data = pd.DataFrame([[
                     order, reverse_map(country, COUNTRY_MAP), session_id, 
-                    reverse_map(category, CATEGORY_MAP), clothing_model_encoded_classification, reverse_map(color, COLOR_MAP), 
+                    reverse_map(category, CATEGORY_MAP), reverse_map(color, COLOR_MAP), 
                     reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
-                    price, 1 if price_indicator == "Yes" else 0, page_number
-                ]], columns=['order', 'country', 'session_id', 'page1_main_category','page2_clothing_model', 'colour', 
-                             'location', 'model_photography', 'price', 'price_2', 'page'])
-                prediction = best_classification_model.predict(input_data)[0]
-                st.success(f"✅ Prediction: {'Will Purchase' if prediction == 1 else 'Will Not Purchase'}")
-
+                    price, 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification
+                ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                             'location', 'model_photography', 'price', 'price_2', 'page','page2_clothing_model'])
+                scaled_input = classifier_scaler.transform(input_data)
+                prediction = best_classification_model.predict(scaled_input)[0]
+                if prediction == 1:
+                    st.success(f"✅ Prediction: Customer Will Purchase the Product")
+                else:
+                    st.warning(f"❌ Prediction: Customer Will Not Purchase the Product")
 
     with colB:
         if st.button("♻️ Reset Inputs", key="reset_inputs_classification"):
@@ -374,9 +392,13 @@ if page == "👤 Single Customer Analyzer":
         
         # Main Category Selection
         category = col2.selectbox("**Main Category**", list(CATEGORY_MAP.values()), key="regression_page1_main_category") 
+        category_id = next((k for k, v in CATEGORY_MAP.items() if v == category), None)
+
+        available_clothing_models = category_clothing_map.get(category_id, [])
          
+
         # Clothing Model Code (Text Input)
-        clothing_model = col3.selectbox("**Clothing Model**", list(clothing_model_map.keys()), key="regression_page2_clothing_model")  
+        clothing_model = col3.selectbox("**Clothing Model**", available_clothing_models , key="regression_page2_clothing_model")  
 
         clothing_model_encoded_regression = clothing_model_map[clothing_model]  # Convert back to encoded before prediction
 
@@ -403,7 +425,7 @@ if page == "👤 Single Customer Analyzer":
         page_number = col3.slider("**Page Number in Store**", 1, 5, st.session_state["regression_page"], key="regression_page")  
 
         # Session ID Input
-        session_id = col1.number_input("**Session ID**", min_value=1000, max_value=9999, value=st.session_state["regression_session_id"], key="regression_session_id")  
+        session_id = col1.number_input("**Session ID**", min_value=0,  value=st.session_state["regression_session_id"], key="regression_session_id")  
 
         # Order Number
         order = col2.slider("**Order Number**", 1, 100, st.session_state["regression_order"], key="regression_order")  
@@ -416,12 +438,14 @@ if page == "👤 Single Customer Analyzer":
                     time.sleep(2)
                 input_data = pd.DataFrame([[
                     order, reverse_map(country, COUNTRY_MAP), session_id, 
-                    reverse_map(category, CATEGORY_MAP), clothing_model_encoded_regression , reverse_map(color, COLOR_MAP), 
+                    reverse_map(category, CATEGORY_MAP) , reverse_map(color, COLOR_MAP), 
                     reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
-                    1 if price_indicator == "Yes" else 0, page_number, 1 if purchase_completed == "Yes" else 0
-                ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'page2_clothing_model', 'colour', 
-                             'location', 'model_photography', 'price_2', 'page', 'Purchase Completed'])
-                prediction = best_regression_model.predict(input_data)[0]
+                    1 if price_indicator == "Yes" else 2, page_number, 1 if purchase_completed == "Yes" else 0, clothing_model_encoded_regression
+                ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                             'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Purchase Completed'])
+                
+                scaled_input = regression_scaler.transform(input_data)
+                prediction = best_regression_model.predict(scaled_input)[0]
                 st.success(f"💰 Estimated Revenue: ${prediction:.2f}")
 
         with colB:
