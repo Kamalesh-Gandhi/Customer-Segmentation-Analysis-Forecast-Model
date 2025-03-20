@@ -8,7 +8,7 @@ from utils.helper_functions import Label_Encoding,Store_ProcessedData
 
 
 @step
-def clean_data(df_train:pd.DataFrame , df_test:pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def clean_data(df_train:pd.DataFrame , df_test:pd.DataFrame, encode:bool) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Zenml step for Data cleaning ,Feature Engineering for Train and Test Data
     
@@ -35,7 +35,7 @@ def clean_data(df_train:pd.DataFrame , df_test:pd.DataFrame) -> tuple[pd.DataFra
 
         logging.info('Data Cleaning Completed')
         
-        encoded_df_Train , encoded_df_Test = Label_Encoding(FeaturedEngineered_Traindata, FeaturedEngineered_Testdata ,'page2_clothing_model')
+        encoded_df_Train , encoded_df_Test = Label_Encoding(FeaturedEngineered_Traindata, FeaturedEngineered_Testdata ,'page2_clothing_model',encode)
 
         Store_ProcessedData(encoded_df_Train, 'Processed_Train_Data')
         Store_ProcessedData(encoded_df_Test, 'Processed_Test_Data')

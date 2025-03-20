@@ -150,8 +150,11 @@ def train_regression_models(df: pd.DataFrame, target_col: str, depend: dict) -> 
 Clustering Models Training
 """
 @step(experiment_tracker=experiment_tracker.name)
-def train_clustering_models(df_train: pd.DataFrame, depend: dict, num_clusters: int) -> dict:
+def train_clustering_models(df_train: pd.DataFrame,  num_clusters: int) -> dict:
     """Trains clustering models, logs them with MLflow, and saves the models."""
+    
+    depend = {} # Dummy variable to create dependency for next step ,to avoid error in flow
+
 
     logging.info(" Starting Clustering Model Training...")
 

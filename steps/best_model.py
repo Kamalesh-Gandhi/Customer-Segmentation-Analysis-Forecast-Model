@@ -4,6 +4,7 @@ import mlflow
 from zenml import step
 import joblib
 from zenml.client import Client
+from src.Update_DataFrame import Update_Dataframe
 from utils.helper_functions import save_best_model
 from src.Best_Model import (
     select_best_classification_model, 
@@ -88,7 +89,7 @@ def select_best_regression_step(results: dict, models_dir: str, depend: dict) ->
 🔹 Select Best Clustering Model Step (With MLflow Logging)
 """
 @step(experiment_tracker=experiment_tracker.name)
-def select_best_clustering_step(results: dict, models_dir: str, depend: dict) -> tuple[str, str, dict]:
+def select_best_clustering_step(Train:pd.DataFrame,Test:pd.DataFrame,results: dict, models_dir: str, depend: dict) -> tuple[str, str, pd.DataFrame, pd.DataFrame, dict]:
     try:
         logging.info("🔍 Selecting Best Clustering Model...")
 
@@ -112,7 +113,9 @@ def select_best_clustering_step(results: dict, models_dir: str, depend: dict) ->
 
         logging.info(f"✅ Best Clustering Model Selected: {best_model_name}")
 
-        return best_model_name, saved_model_path, depend
+        UpdatedTrain, UpdatedTest = Update_Dataframe(Train,Test)
+
+        return best_model_name, saved_model_path, UpdatedTrain, UpdatedTest,  depend
     except Exception as e:
         logging.error(f"❌ Error selecting best clustering model: {e}")
         raise e

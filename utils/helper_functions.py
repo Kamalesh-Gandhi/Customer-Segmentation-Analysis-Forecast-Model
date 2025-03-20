@@ -77,7 +77,7 @@ def apply_smote(X:pd.DataFrame , y:pd.Series) -> pd.DataFrame :
     return X_resampled, y_resampled
 
 
-def Label_Encoding(df_Train:pd.DataFrame, df_Test: pd.DataFrame, col:str)-> tuple[pd.DataFrame,pd.DataFrame]:
+def Label_Encoding(df_Train:pd.DataFrame, df_Test: pd.DataFrame, col:str, encode:bool)-> tuple[pd.DataFrame,pd.DataFrame]:
     """
     Perform encoding to the Categorical Columns
 
@@ -94,12 +94,26 @@ def Label_Encoding(df_Train:pd.DataFrame, df_Test: pd.DataFrame, col:str)-> tupl
         encoders = {}
         encoder = LabelEncoder()
 
-        df_Train[col] = encoder.fit_transform(df_Train[col])
-        # df_Test[col] = encoder.transform(df_Test[col])
-        df_Test[col] = df_Test[col].apply(lambda x: encoder.transform([x])[0] if x in encoder.classes_ else -1)
-        encoders[col] = encoder  # Store encoder
+        if encode == True:
+            df_Train[col] = encoder.fit_transform(df_Train[col])
+            # df_Test[col] = encoder.transform(df_Test[col])
+            df_Test[col] = df_Test[col].apply(lambda x: encoder.transform([x])[0] if x in encoder.classes_ else -1)
+            encoders[col] = encoder  # Store encoder
 
-        joblib.dump(encoders, "models/Encoder.pkl")   
+            joblib.dump(encoders, "models/Encoder.pkl")   
+        else:
+
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+            # Construct the model file path
+            model_path = os.path.join(project_root, "models", "Encoder.pkl")
+            logging.info(model_path)
+
+            encoders = joblib.load(model_path)
+            encoder = encoders.get(col, LabelEncoder())
+            df_Train[col] = df_Train[col].apply(lambda x: encoder.transform([x])[0] if x in encoder.classes_ else -1)
+            df_Test[col] = df_Test[col].apply(lambda x: encoder.transform([x])[0] if x in encoder.classes_ else -1)
+
 
         logging.info('Encoding Process Finished')
         return df_Train , df_Test
@@ -126,3 +140,4 @@ def save_best_model(best_model, model_name: str, model_type: str, models_dir: st
     except Exception as e:
         logging.error(f"❌ Error saving best {model_type} model: {e}")
         raise e
+

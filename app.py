@@ -6,6 +6,7 @@ import base64
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os ,joblib
+from steps.Data_Clean import clean_data
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, mean_absolute_error
@@ -155,6 +156,7 @@ default_values = {
     "classification_price_2": 'Yes',
     "classification_page": 5,
     "classification_page2_clothing_model": "C20",
+    "classification_customer_group": 0,
 
     # Regression Session Keys (without target column "price")
     "regression_order": 10,
@@ -167,7 +169,8 @@ default_values = {
     "regression_price_2": 'Yes',
     "regression_page": 5,
     "regression_page2_clothing_model": "C20",
-    "regression_purchase_completed": "Yes"
+    "regression_purchase_completed": "Yes",
+    "regression_customer_group": 0
 }
 # Initialize session state
 if "reset" not in st.session_state:
@@ -209,73 +212,53 @@ if page == "🏠 Home":
 # Bulk Prediction Page
 if page == "📂 Bulk Customers Analyzer":
     st.header("Bulk Customers Analyzer - Upload CSV File")
-    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+    uploaded_file = st.file_uploader("📂 Upload your CSV file", type=["csv"])
     
+    # ✅ Initialize Session States
+    if "clustering_done" not in st.session_state:
+        st.session_state["clustering_done"] = False
+    if "regression_done" not in st.session_state:
+        st.session_state["regression_done"] = False
+    if "classification_done" not in st.session_state:
+        st.session_state["classification_done"] = False
+
+
     if uploaded_file is not None:
+
+        # ✅ Load & Preprocess Data
         data = pd.read_csv(uploaded_file)
+
+        # ✅ Step 1: Apply Data Cleaning & Feature Engineering
+        cleaned_data, _ = clean_data(data, data,False) 
         st.write("### Preview of Uploaded Data:")
-        st.dataframe(data.head())
+        st.dataframe(cleaned_data.head())
         
         col1, col2, col3 = st.columns(3)
-        
-        if col1.button("Run Classification", key="bulk_classification"):
-            with st.spinner("Processing Classification..."):
-                time.sleep(2)
 
-                # ✅ Select only relevant columns for classification
-                classification_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
-                                           'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model']
+        if col1.button("Run Clustering", key="bulk_clustering"):
+            with st.spinner("⏳ Running Clustering... Please Wait..."):
+                progress_bar = st.progress(0)
+                for percent in range(100):
+                    time.sleep(0.02)  # Simulating processing time
+                    progress_bar.progress(percent + 1)
 
-                data_for_classification = data[classification_features]
-                scaled_classificationinput = classifier_scaler.transform(data_for_classification)
-                predictions = best_classification_model.predict(scaled_classificationinput)
-
-                data["Predicted Purchase"] = predictions
-
-                st.success("Classification Completed!")
-                st.write("### Classification Predictions:")
-                st.dataframe(data[["session_id", "Predicted Purchase"]])
-                st.download_button("Download Classification Results", data.to_csv(index=False), "classification_results.csv")
-        
-        if col2.button("Run Regression", key="bulk_regression"):
-            with st.spinner("Processing Regression..."):
-                time.sleep(2)
-
-                # ✅ Select only relevant columns for regression
-                regression_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
-                                       'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Purchase Completed']
-
-                data_for_regression = data[regression_features]
-                scaled_regressioninput = regression_scaler.transform(data_for_regression)
-                predictions = best_regression_model.predict(scaled_regressioninput)
-
-                data["Estimated Revenue"] = predictions
-
-                st.success("Regression Completed!")
-
-                # ✅ Display results in tabular format
-                st.write("### Regression Predictions:")
-                st.dataframe(data[["session_id", "Estimated Revenue"]])
-
-                st.download_button("Download Regression Results", data.to_csv(index=False), "regression_results.csv")
-        
-        if col3.button("Run Clustering", key="bulk_clustering"):
-            with st.spinner("Processing Clustering..."):
-                time.sleep(2)
 
                 clustering_features = ['month','day','order', 'country', 'session_id', 'page1_main_category', 'page2_clothing_model', 'colour', 
-                            'location', 'model_photography','price', 'price_2', 'page',  'Purchase Completed','is_weekend','total_clicks','max_page_reached']
-                data_clustering = data[clustering_features]
+                                'location', 'model_photography','price', 'price_2', 'page',  'Purchase Completed','is_weekend','total_clicks','max_page_reached']
+                data_clustering = cleaned_data[clustering_features]
                 scaled_clusteringinput = clustering_scaler.transform(data_clustering)
-                data['Customer Segment'] = best_clustering_model.predict(scaled_clusteringinput)
+                cleaned_data['Customer Segment'] = best_clustering_model.predict(scaled_clusteringinput)
+
+                # ✅ Store in session state to persist across reruns
+                st.session_state["cleaned_data"] = cleaned_data.copy()
 
                 st.success("Clustering Completed!")
-                st.dataframe(data[['session_id','Customer Segment']])
-                st.download_button("Download Clustering Results", data.to_csv(index=False), "clustering_results.csv")
+                st.dataframe(cleaned_data[['session_id','Customer Segment']])
+                st.download_button("Download Clustering Results", cleaned_data.to_csv(index=False), "clustering_results.csv")
 
                 # **Cluster Distribution Bar Chart**
                 st.write("### 🔍 Cluster Distribution")
-                cluster_counts = data['Customer Segment'].value_counts()
+                cluster_counts = cleaned_data['Customer Segment'].value_counts()
                 fig, ax = plt.subplots()
                 cluster_counts.plot(kind="bar", ax=ax, color="skyblue")
                 ax.set_xlabel("Cluster ID")
@@ -298,7 +281,139 @@ if page == "📂 Bulk Customers Analyzer":
                 sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5, ax=ax)
                 ax.set_title("Feature Importance in Clustering")
                 st.pyplot(fig)
+                       
+    
 
+        # ✅ Show Classification & Regression Buttons After Clustering
+        if st.session_state["clustering_done"]:
+
+            if col2.button("Run Classification", key="bulk_classification"):
+
+                if "cleaned_data" in st.session_state:
+                    cleaned_data = st.session_state["cleaned_data"]
+                else:
+                    st.error("🚨 Missing `cleaned_data` from session state! Run Clustering first.")
+                    st.stop()
+
+                if "Customer Segment" not in cleaned_data.columns:
+                    st.error("🚨 'Customer Segment' column is missing! Run Clustering first.")
+                    st.stop()
+
+                with st.spinner("🔍 Running Classification..."):
+                    progress_bar = st.progress(0)
+                    for percent in range(100):
+                        time.sleep(0.02)
+                        progress_bar.progress(percent + 1)
+
+                    # ✅ Select only relevant columns for classification
+                    classification_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model','Customer Segment']
+
+                    data_for_classification = cleaned_data[classification_features]
+                    scaled_classificationinput = classifier_scaler.transform(data_for_classification)
+                    predictions = best_classification_model.predict(scaled_classificationinput)
+
+                    cleaned_data["Predicted Purchase"] = predictions
+
+                    # ✅ Compute Conversion Rate
+                    total_customers = len(cleaned_data)
+                    converted_customers = cleaned_data["Predicted Purchase"].sum()
+                    conversion_rate = (converted_customers / total_customers) * 100
+
+                    st.success(f"✅ Classification Completed! Conversion Rate: **{conversion_rate:.2f}%**")
+                    st.write("### Classification Predictions:")
+                    st.dataframe(cleaned_data[["session_id", "Predicted Purchase"]])
+                    st.download_button("Download Classification Results", cleaned_data.to_csv(index=False), "classification_results.csv")
+
+                    # ✅ Mark Classification as Done
+                    st.session_state["classification_done"] = True
+
+                    # 📊 **Dual Bar Chart: Customer Segment vs Purchase Completed**
+                    st.write("### 📊 Purchase Completion Across Customer Segments")
+
+                    fig, ax = plt.subplots(figsize=(8, 5))
+                    sns.countplot(data=cleaned_data, x="Customer Segment", hue="Predicted Purchase", palette="coolwarm", ax=ax)
+                    
+                    ax.set_xlabel("Customer Segment")
+                    ax.set_ylabel("Count of Customers")
+                    ax.set_title("Comparison of Purchase Completion by Customer Segment")
+                    ax.legend(title="Purchase Completed", labels=["Not Purchased", "Purchased"])
+                    
+                    st.pyplot(fig)
+
+                    # ✅ Display Conversion Rate as Metric
+                    st.metric(label="📈 Conversion Rate", value=f"{conversion_rate:.2f}%")
+            
+
+
+            if col3.button("Run Regression", key="bulk_regression"):
+
+                if "cleaned_data" in st.session_state:
+                    cleaned_data = st.session_state["cleaned_data"]
+                else:
+                    st.error("🚨 Missing `cleaned_data` from session state! Run Clustering first.")
+                    st.stop()
+
+                if "Customer Segment" not in cleaned_data.columns:
+                    st.error("🚨 'Customer Segment' column is missing! Run Clustering first.")
+                    st.stop()
+
+                with st.spinner("📊 Running Regression..."):
+                    progress_bar = st.progress(0)
+                    for percent in range(100):
+                        time.sleep(0.02)
+                        progress_bar.progress(percent + 1)
+
+                    # ✅ Select only relevant columns for regression
+                    regression_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                            'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model','Customer Segment']
+
+                    data_for_regression = cleaned_data[regression_features]
+                    scaled_regressioninput = regression_scaler.transform(data_for_regression)
+                    predictions = best_regression_model.predict(scaled_regressioninput)
+
+                    cleaned_data["Estimated Revenue"] = predictions
+
+                    # ✅ Select only relevant columns for classification
+                    classification_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                                                'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model','Customer Segment']
+
+                    data_for_classification = cleaned_data[classification_features]
+                    data_for_classification["price"] = cleaned_data["Estimated Revenue"]
+                    scaled_classificationinput = classifier_scaler.transform(data_for_classification)
+                    purchase_predictions = best_classification_model.predict(scaled_classificationinput)
+
+                    # ✅ Store purchase predictions in dataframe
+                    cleaned_data["Purchase Completed"] = purchase_predictions
+
+                    # ✅ Calculate Forecasted Revenue
+                    cleaned_data["Forecasted Revenue"] = cleaned_data.apply(lambda row: row["price"] if row["Purchase Completed"] == 1 else 0, axis=1)
+
+                    # ✅ Aggregate Forecasted Revenue by `session_id`
+                    aggregated_revenue = cleaned_data.groupby("session_id")["Forecasted Revenue"].sum().reset_index()
+
+                    st.success("Bulk Regression & Forecasting Completed! ✅")
+
+                    # ✅ Display results in tabular format
+                    st.write("### Final Predictions:")
+                    st.dataframe(aggregated_revenue)
+
+                    # ✅ Download results as CSV
+                    st.download_button("Download Aggregated Forecasting Results", aggregated_revenue.to_csv(index=False), "aggregated_forecasting_results.csv")
+
+                    # ✅ Show summary insights
+                    st.write("### 📊 Summary Insights")
+                    total_revenue = aggregated_revenue["Forecasted Revenue"].sum()
+                    purchase_sessions = aggregated_revenue[aggregated_revenue["Forecasted Revenue"] > 0].shape[0]
+                    total_sessions = len(aggregated_revenue)
+                    purchase_rate = (purchase_sessions / total_sessions) * 100
+
+                    st.metric(label="💰 Total Aggregated Forecasted Revenue", value=f"${total_revenue:,.2f}")
+                    st.metric(label="✅ Purchase Completion Rate (Sessions)", value=f"{purchase_rate:.2f}%")
+
+                    # ✅ Enable Classification
+                    st.session_state["regression_done"] = True
+        
 
 
 # 📌 Single Customer Prediction Page with Tabs
@@ -357,6 +472,10 @@ if page == "👤 Single Customer Analyzer":
         # Order Number
         order = col2.slider("**Order Number**", 1, 100, st.session_state["classification_order"], key="classification_order")  
 
+        #Customer Segment
+        Customer_Group = col3.number_input("**Customer_Group**", min_value=0, max_value = 2, value=st.session_state["classification_customer_group"], key="classification_customer_group")  
+
+
         colA, colB = st.columns([2, 1])
 
     with colA:
@@ -368,9 +487,9 @@ if page == "👤 Single Customer Analyzer":
                     order, reverse_map(country, COUNTRY_MAP), session_id, 
                     reverse_map(category, CATEGORY_MAP), reverse_map(color, COLOR_MAP), 
                     reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
-                    price, 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification
+                    price, 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification, Customer_Group
                 ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
-                             'location', 'model_photography', 'price', 'price_2', 'page','page2_clothing_model'])
+                             'location', 'model_photography', 'price', 'price_2', 'page','page2_clothing_model','Customer Segment'])
                 scaled_input = classifier_scaler.transform(input_data)
                 prediction = best_classification_model.predict(scaled_input)[0]
                 if prediction == 1:
@@ -411,10 +530,6 @@ if page == "👤 Single Customer Analyzer":
         # Model Photography
         model_photography = col3.selectbox("**Model Photography Type**", list(PHOTOGRAPHY_MAP.values()), key="regression_model_photography")  
 
-        # Purchase Completed (Yes/No)
-        purchase_completed = col1.radio("**Purchase Completed?**", ["Yes", "No"], 
-                                index=0 if st.session_state["regression_purchase_completed"] == "Yes" else 1,  
-                                key="regression_purchase_completed")  
   
         # Price Indicator (Above Avg?)
         price_indicator = col2.radio("**Is Price Above Average?**", ["Yes", "No"], 
@@ -428,7 +543,11 @@ if page == "👤 Single Customer Analyzer":
         session_id = col1.number_input("**Session ID**", min_value=0,  value=st.session_state["regression_session_id"], key="regression_session_id")  
 
         # Order Number
-        order = col2.slider("**Order Number**", 1, 100, st.session_state["regression_order"], key="regression_order")  
+        order = col1.slider("**Order Number**", 1, 100, st.session_state["regression_order"], key="regression_order")  
+
+        # Customer Group
+        Customer_Group = col2.number_input("**Customer_Group**", min_value=0,max_value = 2, value=st.session_state["regression_customer_group"], key="regression_customer_group")  
+
 
         colA, colB = st.columns([2, 1])
 
@@ -440,13 +559,26 @@ if page == "👤 Single Customer Analyzer":
                     order, reverse_map(country, COUNTRY_MAP), session_id, 
                     reverse_map(category, CATEGORY_MAP) , reverse_map(color, COLOR_MAP), 
                     reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
-                    1 if price_indicator == "Yes" else 2, page_number, 1 if purchase_completed == "Yes" else 0, clothing_model_encoded_regression
+                    1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_regression,Customer_Group
                 ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
-                             'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Purchase Completed'])
+                             'location', 'model_photography', 'price_2', 'page', 'page2_clothing_model', 'Customer Segment'])
                 
                 scaled_input = regression_scaler.transform(input_data)
-                prediction = best_regression_model.predict(scaled_input)[0]
-                st.success(f"💰 Estimated Revenue: ${prediction:.2f}")
+                regressionprediction = best_regression_model.predict(scaled_input)[0]
+
+                input_data = pd.DataFrame([[
+                    order, reverse_map(country, COUNTRY_MAP), session_id, 
+                    reverse_map(category, CATEGORY_MAP), reverse_map(color, COLOR_MAP), 
+                    reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
+                    round(regressionprediction), 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification,Customer_Group
+                ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
+                             'location', 'model_photography', 'price', 'price_2', 'page','page2_clothing_model','Customer Segment'])
+                scaled_input = classifier_scaler.transform(input_data)
+                prediction = best_classification_model.predict(scaled_input)[0]
+                if prediction == 1:
+                    st.success(f"💰 Estimated Forecasted Revenue: ${regressionprediction:.2f}")
+                else:
+                    st.warning(f"💰 Estimated Forecasted Revenue: ${0}")
 
         with colB:
             if st.button("♻️ Reset Inputs", key="reset_inputs_regression"):

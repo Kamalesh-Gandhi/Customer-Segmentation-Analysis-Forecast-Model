@@ -55,11 +55,11 @@ def Feature_Selection_Classification(df_train:pd.DataFrame,
 
         classification_feature_selected_dfTrain = df_train[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
                                                             'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
-                                                            'Purchase Completed']]
+                                                            'Purchase Completed','Customer Segment']]
         
         classification_feature_selected_dfTest = df_test[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
                                                         'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
-                                                        'Purchase Completed']]
+                                                        'Purchase Completed','Customer Segment']]
 
         if classification_feature_selected_dfTrain is None:
             raise ValueError("🚨 classification_feature_selected_df Train is empty. Check the significant features value.")
@@ -125,11 +125,11 @@ def Feature_Selection_Regression(df_train:pd.DataFrame,
 
         Regression_feature_selected_dfTrain = df_train[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
                                                         'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
-                                                        'Purchase Completed']]
+                                                        'Customer Segment']]
         
         Regression_feature_selected_dfTest = df_test[['order', 'country', 'session_id', 'page1_main_category', 'colour', 
                                                     'location', 'model_photography', 'price', 'price_2', 'page', 'page2_clothing_model', 
-                                                    'Purchase Completed']]
+                                                    'Customer Segment']]
 
         if Regression_feature_selected_dfTrain is None:
             raise ValueError("🚨 Regression_feature_selected_df Train is empty. Check the significant features value.")
