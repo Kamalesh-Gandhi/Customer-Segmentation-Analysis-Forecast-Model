@@ -84,14 +84,14 @@ This empowers e-commerce platforms to optimize marketing strategies, enhance pro
 ```bash
 git clone https://github.com/your-username/your-repo.git
 cd your-repo
-
+```
 ### Set Up a Virtual Environment
 ```bash
 python -m venv env
 source env/bin/activate  # For Windows: env\Scripts\activate
-
+```
 ### Install Dependencies
 ```bash
 pip install -r requirements.txt
-
+```
 
