@@ -121,7 +121,8 @@ def set_background(image_file):
     )
 
 # Apply Background Image
-set_background("UI Images\main_backgroundimage.jpg")
+background_image_path = os.path.join("UI Images", "main_backgroundimage.jpg")
+set_background(background_image_path)
 
 
 # Sidebar Background Color
@@ -137,7 +138,8 @@ st.markdown(
 )
 
 # Sidebar Logo image 
-st.sidebar.image("UI Images\sidebar_logoimage.png", use_container_width=True)
+sidebar_logo_path = os.path.join("UI Images", "sidebar_logoimage.png")
+st.sidebar.image(sidebar_logo_path, use_container_width=True)
 
 # Sidebar Navigation
 page = st.sidebar.radio("**NAVIGATION**", ["🏠 Home", "📂 Bulk Customers Analyzer", "👤 Single Customer Analyzer"])
