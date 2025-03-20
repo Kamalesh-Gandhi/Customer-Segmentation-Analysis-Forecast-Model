@@ -82,7 +82,7 @@ This empowers e-commerce platforms to optimize marketing strategies, enhance pro
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/your-username/your-repo.git
+git clone https://github.com/Kamalesh-Gandhi/Customer-Segmentation-Analysis-Forecast-Model.git
 cd your-repo
 ```
 ### Set Up a Virtual Environment
