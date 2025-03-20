@@ -78,12 +78,20 @@ This empowers e-commerce platforms to optimize marketing strategies, enhance pro
 - **Deployment:**  
   Easily deploy the application to serve business users with intuitive insights.
 
-## ZenML & MLflow Setup
+## Installation & Setup
 
-### ZenML Setup
-1. **Installation:**  
-   Ensure ZenML is installed as part of your environment (usually via your `requirements.txt`):
-   ```bash
-   pip install zenml
-         
-           
+### Clone the Repository
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+
+### Set Up a Virtual Environment
+```bash
+python -m venv env
+source env/bin/activate  # For Windows: env\Scripts\activate
+
+### Install Dependencies
+```bash
+pip install -r requirements.txt
+
+
