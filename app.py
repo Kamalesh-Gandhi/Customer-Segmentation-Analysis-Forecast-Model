@@ -12,9 +12,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, mean_absolute_error
 
 
-classifier_scaler = joblib.load("models\Classification_scaler.pkl")
-regression_scaler = joblib.load("models\Regression_scaler.pkl")
-clustering_scaler = joblib.load("models\clustering_scaler.pkl")
+classifier_scaler = joblib.load(os.path.join("models", "Classification_scaler.pkl"))
+regression_scaler = joblib.load(os.path.join("models", "Regression_scaler.pkl"))
+clustering_scaler = joblib.load(os.path.join("models", "clustering_scaler.pkl"))
 
 # ✅ Mapping for categorical values
 COUNTRY_MAP = {
