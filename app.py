@@ -321,7 +321,8 @@ if page == "📂 Bulk Customers Analyzer":
 
                     # ✅ Compute Conversion Rate
                     total_customers = len(cleaned_data)
-                    converted_customers = cleaned_data["Predicted Purchase"].sum()
+                    converted_customers = (cleaned_data["Predicted Purchase"] == "Purchase Will Complete").sum()
+
                     conversion_rate = (converted_customers / total_customers) * 100
 
                     st.success(f"✅ Classification Completed! Conversion Rate: **{conversion_rate:.2f}%**")
@@ -399,7 +400,7 @@ if page == "📂 Bulk Customers Analyzer":
 
                     # ✅ Round Final Aggregated Revenue
                     aggregated_revenue["Forecasted Revenue"] = np.round(aggregated_revenue["Forecasted Revenue"], 2)
-                    
+
                     st.success("Bulk Regression & Forecasting Completed! ✅")
 
                     # ✅ Display results in tabular format
