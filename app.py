@@ -317,6 +317,7 @@ if page == "📂 Bulk Customers Analyzer":
                     predictions = best_classification_model.predict(scaled_classificationinput)
 
                     cleaned_data["Predicted Purchase"] = predictions
+                    cleaned_data["Predicted Purchase"] = cleaned_data["Predicted Purchase"].map({1: "Purchase Will Complete", 0: "Purchase Will Not Complete"})
 
                     # ✅ Compute Conversion Rate
                     total_customers = len(cleaned_data)
@@ -375,7 +376,8 @@ if page == "📂 Bulk Customers Analyzer":
                     scaled_regressioninput = regression_scaler.transform(data_for_regression)
                     predictions = best_regression_model.predict(scaled_regressioninput)
 
-                    cleaned_data["Estimated Revenue"] = predictions
+                    # ✅ Round Revenue Values
+                    cleaned_data["Estimated Revenue"] = np.round(predictions, 2)
 
                     # ✅ Select only relevant columns for classification
                     classification_features = ['order', 'country', 'session_id', 'page1_main_category', 'colour', 
@@ -395,6 +397,9 @@ if page == "📂 Bulk Customers Analyzer":
                     # ✅ Aggregate Forecasted Revenue by `session_id`
                     aggregated_revenue = cleaned_data.groupby("session_id")["Forecasted Revenue"].sum().reset_index()
 
+                    # ✅ Round Final Aggregated Revenue
+                    aggregated_revenue["Forecasted Revenue"] = np.round(aggregated_revenue["Forecasted Revenue"], 2)
+                    
                     st.success("Bulk Regression & Forecasting Completed! ✅")
 
                     # ✅ Display results in tabular format
@@ -569,17 +574,20 @@ if page == "👤 Single Customer Analyzer":
                 scaled_input = regression_scaler.transform(input_data)
                 regressionprediction = best_regression_model.predict(scaled_input)[0]
 
+                # ✅ Round the Revenue Value
+                rounded_revenue = round(regressionprediction, 2)
+
                 input_data = pd.DataFrame([[
                     order, reverse_map(country, COUNTRY_MAP), session_id, 
                     reverse_map(category, CATEGORY_MAP), reverse_map(color, COLOR_MAP), 
                     reverse_map(location, LOCATION_MAP), reverse_map(model_photography, PHOTOGRAPHY_MAP), 
-                    round(regressionprediction), 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification,Customer_Group
+                    rounded_revenue, 1 if price_indicator == "Yes" else 2, page_number, clothing_model_encoded_classification,Customer_Group
                 ]], columns=['order', 'country', 'session_id', 'page1_main_category', 'colour', 
                              'location', 'model_photography', 'price', 'price_2', 'page','page2_clothing_model','Customer Segment'])
                 scaled_input = classifier_scaler.transform(input_data)
                 prediction = best_classification_model.predict(scaled_input)[0]
                 if prediction == 1:
-                    st.success(f"💰 Estimated Forecasted Revenue: ${regressionprediction:.2f}")
+                    st.success(f"💰 Estimated Forecasted Revenue: ${rounded_revenue}**")
                 else:
                     st.warning(f"💰 Estimated Forecasted Revenue: ${0}")
 
