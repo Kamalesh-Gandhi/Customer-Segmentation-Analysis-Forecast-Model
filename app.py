@@ -283,9 +283,10 @@ if page == "📂 Bulk Customers Analyzer":
                 sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5, ax=ax)
                 ax.set_title("Feature Importance in Clustering")
                 st.pyplot(fig)
+
+                st.session_state["clustering_done"] = True
                        
     
-
         # ✅ Show Classification & Regression Buttons After Clustering
         if st.session_state["clustering_done"]:
 
