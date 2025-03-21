@@ -95,3 +95,5 @@ source env/bin/activate  # For Windows: env\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Deployed this application in "Streamlit Cloud" platform. Use this link to access the UI
+https://customer-segmentation-analysis-forecast-model-fskpcaj3pq3bkmha.streamlit.app
