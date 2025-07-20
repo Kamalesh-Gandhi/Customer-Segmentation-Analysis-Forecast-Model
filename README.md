@@ -1,4 +1,4 @@
-# Customer Conversion Analysis for Online Shopping Using Clickstream Data                   
+# Customer Conversion Analysis for Online Shopping Using Clickstream Data                      
 
 ## Overview
 This project leverages clickstream data to predict customer conversion, estimate potential revenue, and segment customers—all within an interactive Streamlit web application. By combining robust data pipelines with state-of-the-art machine learning, the solution enables e-commerce businesses to make informed, data-driven decisions.
